@@ -589,7 +589,7 @@ select.form-input{cursor:pointer}
 
 <script>
 const SERVER = 'https://byscript-server-production.up.railway.app';
-let SECRET = localStorage.getItem('admin_secret') || '';
+let SECRET = '';
 let allCustomers = [];
 let filteredCustomers = [];
 let custPage = 1;
@@ -610,7 +610,6 @@ function doLogin() {
   const val = document.getElementById('login-input').value.trim();
   if (!val) return;
   SECRET = val;
-  localStorage.setItem('admin_secret', val);
   loadAll();
 }
 document.getElementById('login-input').addEventListener('keydown', e => {
@@ -618,7 +617,6 @@ document.getElementById('login-input').addEventListener('keydown', e => {
 });
 function doLogout() {
   SECRET = '';
-  localStorage.removeItem('admin_secret');
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-input').value = '';
@@ -997,7 +995,7 @@ function renderProducts(data) {
         <button class="btn btn-outline btn-sm" onclick="toggleProduct('${p.id}',${!p.is_active})">
           ${p.is_active ? 'Nonaktifkan' : 'Aktifkan'}
         </button>
-        <button class="btn btn-outline btn-sm" onclick="openEditProductModal(this)" data-product="${JSON.stringify(p).replace(/"/g,'&quot;')}">
+        <button class="btn btn-outline btn-sm" onclick="openEditProductModal(${JSON.stringify(p).replace(/'/g,'&#39;')})">
           Edit
         </button>
         <button class="btn btn-danger btn-sm" onclick="openDeleteProductModal('${p.id}','${esc(p.name)}','${esc(p.scalev_slug)}')">
@@ -1093,8 +1091,8 @@ async function toggleProduct(id, isActive) {
 
 let deleteProductTarget = null;
 
-function openEditProductModal(btn) {
-  const p = JSON.parse(btn.getAttribute('data-product'));
+function openEditProductModal(p) {
+  if (typeof p === 'string') p = JSON.parse(p);
   document.getElementById('ep-id').value = p.id;
   document.getElementById('ep-slug').value = p.scalev_slug || '';
   document.getElementById('ep-group').value = p.product_group || '';
@@ -1248,6 +1246,9 @@ function showToast(msg, type = 'success') {
   wrap.appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
+
+// ── Init ─────────────────────────────────────────────────────
+if (SECRET) loadAll();
 </script>
 </body>
 </html>
