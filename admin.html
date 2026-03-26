@@ -504,8 +504,8 @@ function renderDashTable(data) {
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="empty-text">Belum ada data</div></td></tr>'; return; }
   tbody.innerHTML = data.map(c => `
     <tr>
-      <td><div class="td-name">${esc(c.full_name||'—')}</div><div class="td-email">${esc(c.email)}</div></td>
-      <td>${packageBadge(c.package_name)}</td>
+      <td><div class="td-name">${esc(c.customers?.full_name||'—')}</div><div class="td-email">${esc(c.customers?.email||'')}</div></td>
+      <td>${packageBadge(c.products?.name)}</td>
       <td class="td-mono">${fmtDate(c.lms_expires_at)}</td>
       <td>${discordBadge(c.discord_status)}</td>
       <td>${lmsBadge(c.lms_status)}</td>
@@ -518,11 +518,11 @@ function renderCustomers(data) {
   tbody.innerHTML = data.map(c => `
     <tr>
       <td>
-        <div class="td-name">${esc(c.full_name||'—')}</div>
-        <div class="td-email">${esc(c.email)}</div>
-        ${c.phone ? `<div class="td-email">${esc(c.phone)}</div>` : ''}
+        <div class="td-name">${esc(c.customers?.full_name||'—')}</div>
+        <div class="td-email">${esc(c.customers?.email||'')}</div>
+        ${c.customers?.phone ? `<div class="td-email">${esc(c.customers.phone)}</div>` : ''}
       </td>
-      <td>${packageBadge(c.package_name)}</td>
+      <td>${packageBadge(c.products?.name)}</td>
       <td class="td-mono">${fmtDate(c.lms_expires_at)}</td>
       <td class="td-mono">${c.discord_expires_at ? fmtDate(c.discord_expires_at) : '<span style="color:var(--muted)">—</span>'}</td>
       <td>${lmsBadge(c.lms_status)}</td>
@@ -532,7 +532,7 @@ function renderCustomers(data) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
           </button>
           <div class="dropdown">
-            <div class="dropdown-item" onclick="openRevokeModal('${c.customer_id}','${c.product_id||''}','${esc(c.email)}','${esc(c.package_name||'')}')">
+            <div class="dropdown-item" onclick="openRevokeModal('${c.customer_id}','${c.product_id||''}','${esc(c.customers?.email||'')}','${esc(c.products?.name||'')}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
               Revoke Akses
             </div>
@@ -545,8 +545,8 @@ function renderCustomers(data) {
 function filterCustomers(q) {
   const filtered = q
     ? allCustomers.filter(c =>
-        (c.email||'').toLowerCase().includes(q.toLowerCase()) ||
-        (c.full_name||'').toLowerCase().includes(q.toLowerCase())
+        (c.customers?.email||'').toLowerCase().includes(q.toLowerCase()) ||
+        (c.customers?.full_name||'').toLowerCase().includes(q.toLowerCase())
       )
     : allCustomers;
   renderCustomers(filtered);
