@@ -589,7 +589,7 @@ select.form-input{cursor:pointer}
 
 <script>
 const SERVER = 'https://byscript-server-production.up.railway.app';
-let SECRET = '';
+let SECRET = localStorage.getItem('admin_secret') || '';
 let allCustomers = [];
 let filteredCustomers = [];
 let custPage = 1;
@@ -610,6 +610,7 @@ function doLogin() {
   const val = document.getElementById('login-input').value.trim();
   if (!val) return;
   SECRET = val;
+  localStorage.setItem('admin_secret', val);
   loadAll();
 }
 document.getElementById('login-input').addEventListener('keydown', e => {
@@ -617,6 +618,7 @@ document.getElementById('login-input').addEventListener('keydown', e => {
 });
 function doLogout() {
   SECRET = '';
+  localStorage.removeItem('admin_secret');
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-input').value = '';
@@ -1246,7 +1248,6 @@ function showToast(msg, type = 'success') {
   wrap.appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
-
 // ── Init ─────────────────────────────────────────────────────
 if (SECRET) loadAll();
 </script>
