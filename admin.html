@@ -538,6 +538,53 @@ select.form-input{cursor:pointer}
   </div>
 </div>
 
+<!-- Modal Edit Product -->
+<div class="modal-bg" id="modal-edit-product">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Edit Produk</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-product')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ep-id"/>
+      <div class="form-group">
+        <label class="form-label">Scalev Slug *</label>
+        <input class="form-input" id="ep-slug" placeholder="belajaralgoai-basic"/>
+        <div class="form-hint">Sama dengan path URL landing page Scalev</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Product Group *</label>
+          <input class="form-input" id="ep-group" placeholder="algo-ai"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nama Paket *</label>
+          <input class="form-input" id="ep-name" placeholder="Basic"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Durasi LMS (hari) *</label>
+          <input class="form-input" id="ep-lms" type="number" placeholder="365"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Durasi Discord (hari)</label>
+          <input class="form-input" id="ep-discord" type="number" placeholder="0"/>
+          <div class="form-hint">0 = tidak dapat Discord</div>
+        </div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="ep-has-discord" style="width:16px;height:16px;accent-color:var(--accent)"/>
+        <label class="form-label" for="ep-has-discord" style="margin:0;cursor:pointer">Include akses Discord</label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-outline" style="flex:1" onclick="closeModal('modal-edit-product')">Batal</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitEditProduct()">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -948,7 +995,7 @@ function renderProducts(data) {
         <button class="btn btn-outline btn-sm" onclick="toggleProduct('${p.id}',${!p.is_active})">
           ${p.is_active ? 'Nonaktifkan' : 'Aktifkan'}
         </button>
-        <button class="btn btn-outline btn-sm" onclick="openEditProductModal(${JSON.stringify(p).replace(/'/g,'&#39;')})">
+        <button class="btn btn-outline btn-sm" onclick="openEditProductModal(this)" data-product="${JSON.stringify(p).replace(/"/g,'&quot;')}">
           Edit
         </button>
         <button class="btn btn-danger btn-sm" onclick="openDeleteProductModal('${p.id}','${esc(p.name)}','${esc(p.scalev_slug)}')">
@@ -1044,8 +1091,8 @@ async function toggleProduct(id, isActive) {
 
 let deleteProductTarget = null;
 
-function openEditProductModal(p) {
-  if (typeof p === 'string') p = JSON.parse(p);
+function openEditProductModal(btn) {
+  const p = JSON.parse(btn.getAttribute('data-product'));
   document.getElementById('ep-id').value = p.id;
   document.getElementById('ep-slug').value = p.scalev_slug || '';
   document.getElementById('ep-group').value = p.product_group || '';
@@ -1091,6 +1138,37 @@ async function confirmDeleteProduct() {
     else showToast(data.error || 'Gagal hapus', 'error');
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
   deleteProductTarget = null;
+}
+
+function openEditProductModal(p) {
+  document.getElementById('ep-id').value = p.id;
+  document.getElementById('ep-slug').value = p.scalev_slug || '';
+  document.getElementById('ep-group').value = p.product_group || '';
+  document.getElementById('ep-name').value = p.name || '';
+  document.getElementById('ep-lms').value = p.lms_duration_days || '';
+  document.getElementById('ep-discord').value = p.discord_duration_days || 0;
+  document.getElementById('ep-has-discord').checked = p.has_discord || false;
+  document.getElementById('modal-edit-product').classList.add('open');
+}
+
+async function submitEditProduct() {
+  const id = document.getElementById('ep-id').value;
+  const body = {
+    scalev_slug:           document.getElementById('ep-slug').value.trim(),
+    product_group:         document.getElementById('ep-group').value.trim(),
+    name:                  document.getElementById('ep-name').value.trim(),
+    lms_duration_days:     Number(document.getElementById('ep-lms').value),
+    discord_duration_days: Number(document.getElementById('ep-discord').value || 0),
+    has_discord:           document.getElementById('ep-has-discord').checked
+  };
+  if (!body.scalev_slug || !body.product_group || !body.name || !body.lms_duration_days) {
+    return showToast('Semua field wajib diisi', 'error');
+  }
+  try {
+    const data = await api('/admin/products/' + id, { method: 'PATCH', body: JSON.stringify(body) });
+    if (data.success) { showToast('Produk berhasil diupdate', 'success'); closeModal('modal-edit-product'); loadAll(); }
+    else showToast(data.error || 'Gagal', 'error');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 
 async function deleteProduct(id, name) {
